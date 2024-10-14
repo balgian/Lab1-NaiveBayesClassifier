@@ -1,7 +1,9 @@
 import os
-import math
+import tkinter.messagebox
+
 import numpy as np
 import pandas as pd
+import tkinter.messagebox as tk_message
 from sklearn.naive_bayes import GaussianNB
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
@@ -12,30 +14,48 @@ def main() -> None:
     path_weather: str = os.path.join(os.getcwd(), "Data")
     # Loading data and shuffling the row
     table_data: pd.DataFrame = pd.read_fwf(os.path.join(path_weather, "weatherdata.txt"), header=0)
-    table_data = table_data.sample(n=len(table_data))  # ! Substitute the classifications with numbers
+    table_data = table_data.sample(n=len(table_data))
     # Splitting input to output data
     # 'drop(columns=['Play'])' exclude the colon 'Play'
-    x_data: list[np.array] = [pd.factorize(table_data[col])[0] for col in table_data.drop(columns=['Play'])]
-    y_data: np.array = pd.factorize(table_data['Play'])[0]
+    x_data: np.array = np.column_stack([pd.factorize(table_data[col])[0] for col in table_data.drop(columns=['Play'])])
+    y_data, codes = pd.factorize(table_data['Play'])
     # Splitting the data in two: training and test sets
-    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data, test_size=0.2, random_state=42)
+    x_train, x_test, y_train, y_test = train_test_split(x_data, y_data.T, test_size=0.25, random_state=42,
+                                                        shuffle=False)
+    try:
+        x_train_shape = x_train.shape[1]
+    except IndexError:
+        x_train_shape = 1
+    try:
+        x_test_shape = x_test.shape[1]
+    except IndexError:
+        x_test_shape = 1
+    if not (x_train_shape - 1 <= x_test_shape <= x_train_shape):
+        tk_message.showerror("Dimensional error", "Issue with of x test set's columns.")
+        return
+    #
+    try:
+        y_train_shape = y_train.shape[1]
+    except IndexError:
+        y_train_shape = 1
+    try:
+        y_test_shape = y_test.shape[1]
+    except IndexError:
+        y_test_shape = 1
+    if not (y_train_shape - 1 <= y_test_shape <= y_train_shape):
+        tk_message.showerror("Dimensional error", "Issue with of y test set's columns.")
+        return
     # Creating and training the Naive Bayes model
     model: GaussianNB = GaussianNB()
     model.fit(x_train, y_train)
     # Predicting the test set results
     y_pred = model.predict(x_test)
-    # Evaluating the model
-    accuracy = accuracy_score(y_test, y_pred)
-    precision = precision_score(y_test, y_pred, average='macro')
-    recall = recall_score(y_test, y_pred, average='macro')
-    f1 = f1_score(y_test, y_pred, average='macro')
-
-    # Print the results
-    print("Accuracy:", accuracy)
-    print("Precision:", precision)
-    print("Recall:", recall)
-    print("F1 Score:", f1)
-
+    if y_test_shape == y_train_shape:
+        error_rate = np.mean(y_pred != y_test)
+        test_table_data = table_data[-len(y_test):]
+        test_table_data['Play prediction'] = codes[y_pred]
+        print(test_table_data[-len(y_test):])
+        print(f'The error rate is {error_rate}')
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
