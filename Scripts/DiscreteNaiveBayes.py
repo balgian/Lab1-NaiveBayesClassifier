@@ -1,6 +1,7 @@
 from collections import defaultdict
 import numpy as np
 
+
 def calculate_class_priors(y):
     # Calculate the prior probabilities for each output class
     class_counts = defaultdict(int)
@@ -63,7 +64,7 @@ class DiscreteNaiveBayes:
                     except KeyError as e:
                         print(f'The feature {e} is not in the training set. Possible values are '
                               f'{list(self.feature_conditional_probabilities[feature_idx].keys())}')
-                        exit(-1)
+                        exit(-3)
                 output_class_probabilities[output_class] = output_class_probability
             predicted_output_class = max(output_class_probabilities, key=output_class_probabilities.get)
             predictions.append(predicted_output_class)

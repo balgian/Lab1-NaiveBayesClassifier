@@ -1,0 +1,117 @@
+\documentclass[9pt,technote]{IEEEtran}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{cite}
+\usepackage{newtxtext,newtxmath}
+\usepackage{tablefootnote}
+\title{Naive Bayes classifier}
+\author{
+	Gian Marco Balia\\
+	Robotic Engineering - University of Genoa\\
+	s4398275@studenti.unige.it
+}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+The Naive Bayes Classification is a family of algorithms for probabilistic classification based on Bayes’ theorem. Relied on the probabilistic problem, naive Bayesian classifiers can be effectively trained in a supervised learning context to classify a set of observations.
+A well-known approach to smooth the Naive Bayes Classifier is the Laplace Smoothing, that consist in adds one observation to each input class.
+In this toy-study was considered a weather dataset to decide whether to go play outdoor.
+\end{abstract}
+
+
+\begin{IEEEkeywords}
+Naive Bayes Classifier, Laplace smoothing, Weather dataset 
+\end{IEEEkeywords}
+
+\section{Introduction}
+The Naive Bayes Classifier model is widely employed \cite{wickramasinghe2021NaiveBayesApplicationsa} in machine learning application from medical diagnosis \cite{al2012medical} to students' education \cite{nafea2018machine}. Based on the specific characteristics of each probabilistic model, naive Bayesian classifiers can be trained in a supervised learning context to classify a set of observations \cite{derbel2020automatic}. In this toy-study we used it to predict a easy probabilistic problem. The aim of the model was to predict if would be a good day to play tennis outside given four classes of data, i.e., \textit{outlook}, \textit{temperature}, \textit{humidity}, and \textit{windy}.
+To avoid null probabilities and enhanced the accuracy, during the model's training were been introduced a Laplace Smoothing, like other studies \cite{narayan2023EarlyPredictionHeart, sabiq2024PerformanceComparisonMultinomial}.
+
+\section{Material and methods}
+% Task 1: Data Processing
+\subsection{Data processing}
+Before working with the data it was needed to be processed. The first thing was to shuffle raw's dataset, preventing paths in itself avoiding biases in the trained model.
+At this point, the data reported in Table \ref{tab::weatherdataset}, was splitted in four parts:
+\begin{enumerate}
+	\item \textit{training input data}, the $75\,\%$ of the input data (i.e., \textit{Outlook}, \textit{Temperature}, \textit{Humidity}, and \textit{Windy});
+	\item \textit{test input data}, the remaining $25\,\%$ of the input data;
+	\item \textit{training output data}, the $75\,\%$ of the data in the column \textit{Play};
+	\item \textit{test input data}, the remaining $25\,\%$ of the output data.
+\end{enumerate}
+The input and output training data are used to fit the Naive Bayes Classifier. After testing the trained model (with test data), were evaluated with \textit{error rate}.
+\begin{table}
+\small\center
+	\begin{tabular}{c|c|c|c|c}
+		Outlook   & Temperature & Humidity & Windy & Play \\
+		\hline
+		overcast  & hot         & high     & False & yes  \\ 
+		overcast  & cool        & normal   & True  & yes  \\ 
+		overcast  & mild        & high     & True  & yes  \\ 
+		overcast  & hot         & normal   & False & yes  \\ 
+		rainy     & mild        & high     & False & yes  \\
+		rainy     & cool        & normal   & False & yes  \\
+		rainy     & cool        & normal   & True  & no   \\
+		rainy     & mild        & normal   & False & yes  \\
+		rainy     & mild        & high     & True  & no   \\
+		sunny     & hot         & high     & False & no   \\
+		sunny     & hot         & high     & True  & no   \\
+		sunny     & mild        & high     & False & no   \\
+		sunny     & cool        & normal   & False & yes  \\
+		sunny     & mild        & normal   & True  & yes
+	\end{tabular}
+	\caption{Table of weather's dataset}
+	\footnotesize{Each classe had different features: the \textit{outlook} was describable as \textit{overcast}, \textit{rainy}, and \textit{sunny}, the \textit{temperature} with \textit{hot}, \textit{cool}, \textit{mild}, the \textit{humidity} level as \textit{high}, \textit{normal}, the \textit{wind} could be present (\textit{True}) or absent (\textit{False}).}
+	\label{tab::weatherdataset}
+\end{table}
+
+% Task 2: Build a Naive Bayes Classifier
+\subsection{Naive Bayes Classifier}
+To simplify the problem we assumed that each feature of each class is independent from the others. This method called \textit{Idiot's Bayes}, although being almost always wrong  is extremely convenient \cite{schonlau2023AppliedStatisticalLearning}.
+In order to train the Naive Bayes Classifier were computed the \textit{priors probability} and \textit{likelihood probability}.
+
+\subsubsection{Priors probability}
+The first part of train the model is to compute the \textit{priors probability}
+\begin{equation*}
+	P(C_j) = \frac{N_{C_j}}{\sum_{k=1}^m N_{C_k}}
+\end{equation*}
+where $N_{C_j}$ is the total number of instances that belong to class $C_j$.
+\subsubsection{Conditional probability}
+The \textit{conditional probability} was unused to fit the model as
+\begin{equation}
+	P(x_i\mid C_j) = \frac{N_{x_i,C_j}}{N_{C_j}}
+	\label{eq::conditionalprobability} 
+\end{equation}
+where $N_{x_i,C_j}$ is the number of times the feature $x_i$ appear in the instance of class $C_j$.
+In order to avoid $P(x_i\mid C_j) = 0$ was implemented the  \textit{Laplace smoothing} and the Equation \ref{eq::conditionalprobability} turns into
+\begin{equation*}
+	P(x_i\mid C_j) = \frac{N_{x_i,C_j} + \alpha}{N_{C_j} + \alpha\nu_i}
+\end{equation*}
+
+\subsubsection{Likelihood probability}
+The prediction in this model is given by the \textit{likelihood probability}
+\begin{equation}
+	P(C_j\mid X) = \frac{P(C_j)\prod_{i=1}^n P(x_i\mid C_j)}{P(X)}
+	\label{eq::likelyhoodprobability}
+\end{equation}
+where $\alpha$ is the \textit{Laplace smoothing parameter} and $\nu_i$ is the number of possibles distinct values that the feature $x_i$ can assume.\\
+Although the probability $P(X)$ is often unknown, it is possible to choose which class $C_i$ has more probability comparing numerator of the fraction in the Equation \ref{eq::likelyhoodprobability}.
+
+\subsection{Model evaluation}
+The model accuracy was estimated using the error rate $r_e$ defined as:
+\begin{equation*}
+	r_e = \frac{\text{Number of correct predictions}}{\text{Total number of predictions}}
+\end{equation*}
+which represents the average of the correct predictions.
+
+\section{Results and Conclusion}
+The model was trained using a toy-study dataset containing $14$th rows. Consequently, the dataset was specifically designed for a toy-study, and the data presented were highly limited. Although the obtained results were coherent, they were insufficient to evaluate the model’s performance, particularly in terms of the \textit{error rate}.
+
+\bibliographystyle{IEEEtranS}
+\bibliography{Bib.bib}
+
+\end{document}
+
